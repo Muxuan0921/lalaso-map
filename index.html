@@ -3,8 +3,8 @@
 <style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:linear-gradient(145deg,#fff1e1,#f9d2d8);font-family:system-ui,'Noto Sans SC',sans-serif;color:#4d3d45}main{width:min(420px,calc(100vw - 48px));padding:36px 30px;border:1px solid #fff;background:#fffdf7d9;border-radius:28px;box-shadow:0 18px 52px #8d52644d;text-align:center}h1{font-size:1.7rem;margin:0 0 10px}p{line-height:1.7;color:#765e69}input{box-sizing:border-box;width:100%;padding:13px 14px;border:2px solid #e8b995;border-radius:13px;font-size:1rem;outline:none}input:focus{border-color:#ff7d9c}button{width:100%;margin-top:13px;padding:13px;border:0;border-radius:13px;background:#ff7d9c;color:#fff;font-size:1rem;font-weight:700;cursor:pointer}#message{min-height:1.4em;color:#bb4f70;font-size:.9rem}</style></head>
 <body><main><h1>我和荔枝的散步地图</h1><p>这是一段只留给熟悉的人看的回忆。<br>输入密码，打开地图。</p><input id="password" type="password" autocomplete="current-password" placeholder="输入密码" autofocus><button id="unlock">打开回忆</button><p id="message" role="alert"></p></main>
 <script>
-const salt=Uint8Array.from(atob('P4quGxtLIE37ja3ZQ05C+Q=='),c=>c.charCodeAt(0));
-const nonce=Uint8Array.from(atob('NQJbih0OQg6MzQyZ'),c=>c.charCodeAt(0));
+const salt=Uint8Array.from(atob('95M1JX8UhSW9yPESSMIyyw=='),c=>c.charCodeAt(0));
+const nonce=Uint8Array.from(atob('ju2panlvLHOM6Jda'),c=>c.charCodeAt(0));
 const msg=document.querySelector('#message'); const input=document.querySelector('#password');
 async function unlock(){
   const password=input.value; if(!password){msg.textContent='请先输入密码。';return;}
@@ -12,7 +12,13 @@ async function unlock(){
   try{
     const material=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveKey']);
     const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},material,{name:'AES-GCM',length:256},false,['decrypt']);
-    const encrypted=await (await fetch('payload-20260726.bin',{cache:'no-store'})).arrayBuffer();
+    const payloadUrls=['https://cdn.jsdelivr.net/gh/Muxuan0921/lalaso-map@main/payload-20260726.bin','payload-20260726.bin'];
+    let response=null;
+    for(const url of payloadUrls){
+      try{const candidate=await fetch(url,{cache:'no-store'}); if(candidate.ok){response=candidate;break;}}catch(_){}
+    }
+    if(!response) throw new Error('payload unavailable');
+    const encrypted=await response.arrayBuffer();
     const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:nonce},key,encrypted);
     document.open();document.write(new TextDecoder().decode(plain));document.close();
   }catch(e){msg.textContent='密码不正确，请再试一次。';input.select();}
